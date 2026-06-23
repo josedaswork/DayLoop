@@ -1,0 +1,6 @@
+{
+  "name": "Dayloop",
+  "description": "Un rastreador elegante y ágil para tus hábitos diarios y proyectos personales recurrentes, con soporte de sincronización en la nube mediante Google Sheets y exportación compatible con Excel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Hobby Tracker",
+  "description": "Premium habit tracker and project planner synced with spreadsheet implementations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
