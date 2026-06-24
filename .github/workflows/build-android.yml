@@ -10,14 +10,16 @@ jobs:
   build:
     name: Build & Test Android Application
     runs-on: ubuntu-latest
-    
-    defaults:
-      run:
-        working-directory: hobby-tracker
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -26,23 +28,17 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Set up External Environment Config
-        run: |
-          API_KEY="${{ secrets.GEMINI_API_KEY }}"
-          if [ -z "$API_KEY" ]; then API_KEY="dummy_gemini_key"; fi
-          URL="${{ secrets.APPS_SCRIPT_URL }}"
-          if [ -z "$URL" ]; then URL="https://script.google.com/macros/s/dummy/exec"; fi
-          echo "GEMINI_API_KEY=$API_KEY" > .env
-          echo "APPS_SCRIPT_URL=$URL" >> .env
+      - name: Install dependencies
+        run: npm ci || npm install
 
-      - name: Initialize Gradle Wrapper (if missing)
-        run: |
-          if [ ! -f "gradlew" ]; then
-            gradle wrapper
-          fi
-          chmod +x gradlew
+      - name: Build React Web App
+        run: npm run build
+
+      - name: Sync with Capacitor
+        run: npx cap sync
 
       - name: Recreate Debug Keystore
+        working-directory: android
         run: |
           if [ -f "debug.keystore.base64" ]; then
             echo "Recreating debug.keystore from base64..."
@@ -55,31 +51,30 @@ jobs:
 
       - name: Copy App Logo to Android resources
         run: |
-          mkdir -p app/src/main/res/drawable/
-          if [ -f "../Logo/logo_habit.png" ]; then
-            cp ../Logo/logo_habit.png app/src/main/res/drawable/logo_habit.png
+          mkdir -p android/app/src/main/res/drawable/
+          if [ -f "Logo/logo_habit.png" ]; then
+            cp Logo/logo_habit.png android/app/src/main/res/drawable/logo_habit.png
             echo "Logo successfully copied from root Logo folder!"
-          elif [ -f "./Logo/logo_habit.png" ]; then
-            cp ./Logo/logo_habit.png app/src/main/res/drawable/logo_habit.png
-            echo "Logo found inside working-directory, copied!"
-          else
-            echo "Warning: logo_habit.png not found, using existing drawable resource."
           fi
 
       - name: Run Build and Compile APK
-        run: ./gradlew assembleDebug --no-daemon
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
 
       - name: Rename APK for Artifact Export
         run: |
-          if [ -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
-            mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/Dayloop-Debug.apk
+          if [ -f "android/app/build/outputs/apk/debug/app-debug.apk" ]; then
+            mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/Dayloop-Debug.apk
           else
             echo "app-debug.apk not found in default location, searching..."
-            find app/build/outputs/ -name "*.apk"
+            find android/app/build/outputs/ -name "*.apk"
           fi
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: Dayloop-Debug-APK
-          path: hobby-tracker/app/build/outputs/apk/debug/Dayloop-Debug.apk
+          path: android/app/build/outputs/apk/debug/Dayloop-Debug.apk
+

@@ -1,0 +1,6 @@
+{
+	"appId": "com.dayloop.app",
+	"appName": "Dayloop",
+	"webDir": "dist",
+	"bundledWebRuntime": false
+}
