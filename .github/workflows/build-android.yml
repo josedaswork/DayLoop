@@ -57,6 +57,18 @@ jobs:
             echo "Logo successfully copied from root Logo folder!"
           fi
 
+      - name: Regenerate Gradle Wrapper
+        working-directory: android
+        run: |
+          if command -v gradle &> /dev/null; then
+            echo "Using system gradle to regenerate wrapper..."
+            gradle wrapper --gradle-version 8.14.3
+          else
+            echo "gradle command not found, downloading standard gradle-wrapper.jar..."
+            mkdir -p gradle/wrapper
+            curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v8.14.3/gradle/wrapper/gradle-wrapper.jar
+          fi
+
       - name: Run Build and Compile APK
         working-directory: android
         run: |
